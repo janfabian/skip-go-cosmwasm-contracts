@@ -378,6 +378,15 @@ def create_wallet(client) -> LocalWallet:
         wallet = LocalWallet(PrivateKey(terra_wallet.key.private_key), prefix="terra")
         balance = client.query_bank_balance(str(wallet.address()), DENOM)
         print("Wallet Address: ", wallet.address(), " with account balance: ", balance)
+    if CHAIN == "coreum":
+        seed_bytes = Bip39SeedGenerator(MNEMONIC).Generate()
+        bip44_def_ctx = Bip44.FromSeed(seed_bytes, Bip44Coins.COREUM).DeriveDefaultPath()
+        wallet = LocalWallet(
+            PrivateKey(bip44_def_ctx.PrivateKey().Raw().ToBytes()), 
+            prefix=ADDRESS_PREFIX
+        )  
+        balance = client.query_bank_balance(str(wallet.address()), DENOM)
+        print("Wallet Address: ", wallet.address(), " with account balance: ", balance)
     else:
         seed_bytes = Bip39SeedGenerator(MNEMONIC).Generate()
         bip44_def_ctx = Bip44.FromSeed(seed_bytes, Bip44Coins.COSMOS).DeriveDefaultPath()
@@ -630,8 +639,8 @@ def broadcast_tx(tx) -> httpx.Response:
     }
     postResp = httpx.post(RPC_URL, json=data, timeout=60)
     print("postResp.json(): ", postResp.json())
-    print("Sleeping for 20 seconds...")
-    time.sleep(20)
+    print("Sleeping for 5 seconds...")
+    time.sleep(5)
     resp = httpx.get(
         REST_URL + f"/cosmos/tx/v1beta1/txs/{sha256(tx_bytes).hexdigest()}", 
         timeout=60

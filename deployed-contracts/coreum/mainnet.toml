@@ -1,0 +1,45 @@
+[info]
+chain_id = "coreum-mainnet-1"
+network = "mainnet"
+deploy_date = "04/08/2025 10:50:57"
+commit_hash = "<COMMIT HASH HERE>"
+salt = "1"
+
+[checksums]
+"skip_go_entry_point.wasm" = "d897186d3045b63b6f31b9933a9d5e58fd031f2e370e0f4e1186168b3f3ade93"
+"skip_go_hyperlane_adapter.wasm" = "0fac33d0922244d3b14752b70fe0c34918c1a25a5693a069c0508c8648b4861b"
+"skip_go_ibc_adapter_ibc_hooks.wasm" = "a02537b44292c2649632d0a61fde1bc0201f4116307098289d5216a64bb31650"
+"skip_go_ibc_adapter_neutron_transfer.wasm" = "afe14da071f2fba358774c28c9ba7f76e32ed5a3185a6e4323eea71deafdb8b1"
+"skip_go_placeholder.wasm" = "086fdfa47ace9b12054fd15858f1e8ff68909362241950c840438bd0240a66f9"
+"skip_go_swap_adapter_astroport.wasm" = "85d4f0b1a8a7cdd1076df687fc7f4b2d272e9c15c3be005df901708c2af9b8cf"
+"skip_go_swap_adapter_astrovault.wasm" = "a1f4f246887ccadb1518e8b7c7604bff204d09b1bc83dee311488b104db7915a"
+"skip_go_swap_adapter_dexter.wasm" = "bd11e110d13ccf56594f670da9688d7a29c908a6837eb928e3a7d0c57db94e9c"
+"skip_go_swap_adapter_drop.wasm" = "cf022fe689c9bf9b5c8e31874064c004546fd99c55a3661282eb8186694f9886"
+"skip_go_swap_adapter_duality.wasm" = "a62fdb752dabe3203053a35986713008419138ed953b51a97a84198e835f58f1"
+"skip_go_swap_adapter_hallswap.wasm" = "c927433d8a27cd5c5698fcc49fc693ba9a070c16a0aa4979772fdd4916413972"
+"skip_go_swap_adapter_lido_satellite.wasm" = "6144b19bee78e8bc9f5b8ac707042a543db8f54732ab8c3e9db52e74e1df725f"
+"skip_go_swap_adapter_osmosis_poolmanager.wasm" = "79e794f61b4554deaaadc109b40953b94189c3da0ad21998ec36d5c7ae2233e0"
+"skip_go_swap_adapter_pryzm.wasm" = "d2ce5535e7284edee02ba17d94f7a161448a251f428d6c1007bbbb74933f7260"
+"skip_go_swap_adapter_white_whale.wasm" = "e42321550edfdeda1a9c55c6787b89a95c336affcc738ec77568369215fc7420"
+
+[code-ids]
+ibc_transfer_adapter_contract_code_id = "300"
+swap_adapter_pulsara_contract_code_id = "301"
+swap_adapter_cruise-control_contract_code_id = "302"
+entry_point_contract_code_id = "303"
+
+[contract-addresses]
+ibc_transfer_adapter_contract_address = "core1ndl2yxfzlqk4alv667hhyv5yxj8tp0h7cwtpdl0436nw3mnuld6smf32u9"
+swap_adapter_pulsara_contract_address = "core1v73trwrekqk3dmfl9gnffckakmwgy69t9l664ps5u6wkajcdumzqnru2dk"
+swap_adapter_cruise-control_contract_address = "core1ak85eq9cn3amnc4nnvywes43xa8tvw90htdxcnz4hqu3xsntpjuqy67m5g"
+entry_point_contract_address = "core1ajddeee6qp5cfzmsnm7hga0g3tvsjt949d9e5u83nc9uf2297hxqexgp5h"
+
+[tx-hashes]
+store_ibc_transfer_adapter_tx_hash = "b6ed73388c4c3f0e7b2dcc09f8482dc5ad416659baf7d0b95b0f70106afefc77"
+instantiate_ibc_transfer_adapter_tx_hash = "699bfb90a6e1612beb245389ad861476559ab815421685883f3b22efcf6a946a"
+store_swap_adapter_pulsara_tx_hash = "f1b58402fd6166b3916849bfe26612fb08f36fc715ef90737773965acf3675b4"
+instantiate_swap_adapter_pulsara_tx_hash = "c44d655e1307771f80dd86f97ef044de07701fc9d0607ea25dfb0ca44eb0edb9"
+store_swap_adapter_cruise-control_tx_hash = "068375c29298f51c2991ea4a730cf29a23869ff76f3091004f8e7542b5277489"
+instantiate_swap_adapter_cruise-control_tx_hash = "fced8ca1283eaa509b1bbd062120bd5daf6b0a9cc1434e3774a86bd59167ff70"
+store_entry_point_tx_hash = "cfc4ac0c600776eadaf2f8b67de215d9384b06f28d3abfd6871a41e6dba82474"
+instantiate_entry_point_tx_hash = "c95b709412ad147748adf1a105ee787accc194b337dbc985489e2a2fa1252e3d"

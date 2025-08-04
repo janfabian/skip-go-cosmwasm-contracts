@@ -58,25 +58,30 @@ pub fn instantiate(
     let checked_drop_factory_contract_address =
         deps.api.addr_validate(&msg.drop_factory_contract_address)?;
 
-    let drop_factory_state: drop_factory::state::State = deps.querier.query_wasm_smart(
-        &checked_drop_factory_contract_address,
-        &drop_factory::msg::QueryMsg::State {},
-    )?;
+    let drop_factory_state: std::collections::HashMap<String, String> =
+        deps.querier.query_wasm_smart(
+            &checked_drop_factory_contract_address,
+            &drop_staking_base::msg::factory::QueryMsg::State {},
+        )?;
 
     // Store the drop core contract address
     DROP_CORE_CONTRACT_ADDRESS.save(
         deps.storage,
-        &deps.api.addr_validate(&drop_factory_state.core_contract)?,
+        &deps
+            .api
+            .addr_validate(drop_factory_state.get("core_contract").unwrap())?,
     )?;
 
     DROP_TOKEN_CONTRACT_ADDRESS.save(
         deps.storage,
-        &deps.api.addr_validate(&drop_factory_state.token_contract)?,
+        &deps
+            .api
+            .addr_validate(drop_factory_state.get("token_contract").unwrap())?,
     )?;
 
     let drop_token_config: drop_staking_base::msg::token::ConfigResponse =
         deps.querier.query_wasm_smart(
-            &drop_factory_state.token_contract,
+            drop_factory_state.get("token_contract").unwrap(),
             &drop_staking_base::msg::token::QueryMsg::Config {},
         )?;
 
@@ -85,7 +90,7 @@ pub fn instantiate(
     FACTORY_BONDED_DENOM.save(deps.storage, &bonded_denom)?;
 
     let drop_core_config: drop_staking_base::state::core::Config = deps.querier.query_wasm_smart(
-        &drop_factory_state.core_contract,
+        drop_factory_state.get("core_contract").unwrap(),
         &drop_staking_base::msg::core::QueryMsg::Config {},
     )?;
 
@@ -103,7 +108,7 @@ pub fn instantiate(
         )
         .add_attribute(
             "drop_core_contract_address",
-            drop_factory_state.core_contract,
+            drop_factory_state.get("core_contract").unwrap(),
         )
         .add_attribute("factory_bonded_denom", bonded_denom)
         .add_attribute("ibc_remote_denom", drop_core_config.base_denom))

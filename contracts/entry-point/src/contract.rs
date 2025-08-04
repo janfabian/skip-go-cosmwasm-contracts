@@ -161,7 +161,7 @@ pub fn execute(
         ),
         ExecuteMsg::SwapAndAction {
             sent_asset,
-            user_swap,
+            user_swaps,
             min_asset,
             timeout_timestamp,
             post_swap_action,
@@ -171,7 +171,7 @@ pub fn execute(
             env,
             info,
             sent_asset,
-            user_swap,
+            user_swaps,
             min_asset,
             timeout_timestamp,
             post_swap_action,

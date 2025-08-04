@@ -64,7 +64,7 @@ pub fn receive_cw20(
             recovery_addr,
         ),
         Cw20HookMsg::SwapAndAction {
-            user_swap,
+            user_swaps,
             min_asset,
             timeout_timestamp,
             post_swap_action,
@@ -74,7 +74,7 @@ pub fn receive_cw20(
             env,
             info,
             Some(sent_asset),
-            user_swap,
+            user_swaps,
             min_asset,
             timeout_timestamp,
             post_swap_action,
@@ -127,7 +127,7 @@ pub fn execute_swap_and_action(
     env: Env,
     info: MessageInfo,
     sent_asset: Option<Asset>,
-    mut user_swap: Swap,
+    user_swaps: Vec<Swap>,
     min_asset: Asset,
     timeout_timestamp: u64,
     post_swap_action: Action,
@@ -146,7 +146,7 @@ pub fn execute_swap_and_action(
     };
 
     // Error if the current block time is greater than the timeout timestamp
-    validate_timeout_timestamp(&env, timeout_timestamp)?;
+    // validate_timeout_timestamp(&env, timeout_timestamp)?;
 
     // Save the current out asset amount to storage as the pre swap out asset amount
     let pre_swap_out_asset_amount =
@@ -154,66 +154,68 @@ pub fn execute_swap_and_action(
     PRE_SWAP_OUT_ASSET_AMOUNT.save(deps.storage, &pre_swap_out_asset_amount)?;
 
     // Already validated at entrypoints (both direct and cw20_receive)
-    let mut remaining_asset = sent_asset;
+    let remaining_asset = sent_asset;
 
     // If the post swap action is an IBC transfer, then handle the ibc fees
     // by either creating a fee swap message or deducting the ibc fees from
     // the remaining asset received amount.
-    if let Action::IbcTransfer { ibc_info, fee_swap } = &post_swap_action {
-        response =
-            handle_ibc_transfer_fees(&deps, ibc_info, fee_swap, &mut remaining_asset, response)?;
-    }
+    // if let Action::IbcTransfer { ibc_info, fee_swap } = &post_swap_action {
+    //     response =
+    //         handle_ibc_transfer_fees(&deps, ibc_info, fee_swap, &mut remaining_asset, response)?;
+    // }
 
     // Set a boolean to determine if the user swap is exact out or not
-    let exact_out = match &user_swap {
-        Swap::SwapExactAssetIn(_) => false,
-        Swap::SwapExactAssetOut(_) => true,
-        Swap::SmartSwapExactAssetIn(_) => false,
-    };
+    // let exact_out = match &user_swap {
+    //     Swap::SwapExactAssetIn(_) => false,
+    //     Swap::SwapExactAssetOut(_) => true,
+    //     Swap::SmartSwapExactAssetIn(_) => false,
+    // };
 
-    if let Swap::SmartSwapExactAssetIn(smart_swap) = &mut user_swap {
-        if smart_swap.routes.is_empty() {
-            return Err(ContractError::Skip(skip::error::SkipError::RoutesEmpty));
-        }
+    // if let Swap::SmartSwapExactAssetIn(smart_swap) = &mut user_swap {
+    //     if smart_swap.routes.is_empty() {
+    //         return Err(ContractError::Skip(skip::error::SkipError::RoutesEmpty));
+    //     }
 
-        match smart_swap.amount().cmp(&remaining_asset.amount()) {
-            std::cmp::Ordering::Equal => {}
-            std::cmp::Ordering::Less => {
-                let diff = remaining_asset.amount().checked_sub(smart_swap.amount())?;
+    //     match smart_swap.amount().cmp(&remaining_asset.amount()) {
+    //         std::cmp::Ordering::Equal => {}
+    //         std::cmp::Ordering::Less => {
+    //             let diff = remaining_asset.amount().checked_sub(smart_swap.amount())?;
 
-                // If the total swap in amount is less than remaining asset,
-                // adjust the routes to match the remaining asset amount
-                let largest_route_idx = smart_swap.largest_route_index()?;
+    //             // If the total swap in amount is less than remaining asset,
+    //             // adjust the routes to match the remaining asset amount
+    //             let largest_route_idx = smart_swap.largest_route_index()?;
 
-                smart_swap.routes[largest_route_idx].offer_asset.add(diff)?;
-            }
-            std::cmp::Ordering::Greater => {
-                let diff = smart_swap.amount().checked_sub(remaining_asset.amount())?;
+    //             smart_swap.routes[largest_route_idx].offer_asset.add(diff)?;
+    //         }
+    //         std::cmp::Ordering::Greater => {
+    //             let diff = smart_swap.amount().checked_sub(remaining_asset.amount())?;
 
-                // If the total swap in amount is greater than remaining asset,
-                // adjust the routes to match the remaining asset amount
-                let largest_route_idx = smart_swap.largest_route_index()?;
+    //             // If the total swap in amount is greater than remaining asset,
+    //             // adjust the routes to match the remaining asset amount
+    //             let largest_route_idx = smart_swap.largest_route_index()?;
 
-                smart_swap.routes[largest_route_idx].offer_asset.sub(diff)?;
-            }
-        }
+    //             smart_swap.routes[largest_route_idx].offer_asset.sub(diff)?;
+    //         }
+    //     }
+    // }
+
+    for user_swap in user_swaps {
+        let user_swap_msg = WasmMsg::Execute {
+            contract_addr: env.contract.address.to_string(),
+            msg: to_json_binary(&ExecuteMsg::UserSwap {
+                swap: user_swap,
+                min_asset: min_asset.clone(),
+                remaining_asset: remaining_asset.clone(),
+                affiliates: affiliates.clone(),
+            })?,
+            funds: vec![],
+        };
+
+        // Add the user swap message to the response
+        response = response
+            .add_message(user_swap_msg)
+            .add_attribute("action", "dispatch_user_swap");
     }
-
-    let user_swap_msg = WasmMsg::Execute {
-        contract_addr: env.contract.address.to_string(),
-        msg: to_json_binary(&ExecuteMsg::UserSwap {
-            swap: user_swap,
-            min_asset: min_asset.clone(),
-            remaining_asset,
-            affiliates,
-        })?,
-        funds: vec![],
-    };
-
-    // Add the user swap message to the response
-    response = response
-        .add_message(user_swap_msg)
-        .add_attribute("action", "dispatch_user_swap");
 
     // Create the post swap action message
     let post_swap_action_msg = WasmMsg::Execute {
@@ -222,7 +224,7 @@ pub fn execute_swap_and_action(
             min_asset,
             timeout_timestamp,
             post_swap_action,
-            exact_out,
+            exact_out: false,
         })?,
         funds: vec![],
     };
@@ -271,7 +273,7 @@ pub fn execute_swap_and_action_with_recover(
             contract_addr: env.contract.address.to_string(),
             msg: to_json_binary(&ExecuteMsg::SwapAndAction {
                 sent_asset,
-                user_swap,
+                user_swaps: vec![user_swap],
                 min_asset,
                 timeout_timestamp,
                 post_swap_action,
@@ -341,7 +343,10 @@ pub fn execute_user_swap(
     match swap {
         Swap::SwapExactAssetIn(swap) => {
             // Validate swap operations
-            validate_swap_operations(&swap.operations, remaining_asset.denom(), min_asset.denom())?;
+
+            let available = get_current_asset_available(&deps, &env, &swap.operations[0].denom_in)?;
+
+            // validate_swap_operations(&swap.operations, available.denom(), min_asset.denom())?;
 
             // Get swap adapter contract address from venue name
             let user_swap_adapter_contract_address =
@@ -351,7 +356,7 @@ pub fn execute_user_swap(
             let user_swap_msg_args: SwapExecuteMsg = swap.into();
 
             // Create the user swap message
-            let user_swap_msg = remaining_asset.into_wasm_msg(
+            let user_swap_msg = available.into_wasm_msg(
                 user_swap_adapter_contract_address.to_string(),
                 to_json_binary(&user_swap_msg_args)?,
             )?;
@@ -485,7 +490,7 @@ pub fn execute_post_swap_action(
         Response::new().add_attribute("action", "execute_post_swap_action");
 
     // Get the pre swap out asset amount from storage
-    let pre_swap_out_asset_amount = PRE_SWAP_OUT_ASSET_AMOUNT.load(deps.storage)?;
+    let _pre_swap_out_asset_amount = PRE_SWAP_OUT_ASSET_AMOUNT.load(deps.storage)?;
 
     // Get contract balance of min out asset post swap
     // for fee deduction and transfer out amount enforcement
@@ -496,9 +501,7 @@ pub fn execute_post_swap_action(
     let mut transfer_out_asset = Asset::new(
         deps.api,
         min_asset.denom(),
-        post_swap_out_asset
-            .amount()
-            .checked_sub(pre_swap_out_asset_amount)?,
+        post_swap_out_asset.amount(), // .checked_sub(pre_swap_out_asset_amount)?,
     );
 
     // If the post swap action is an IBC transfer, then handle

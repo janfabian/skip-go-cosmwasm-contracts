@@ -49,7 +49,7 @@ pub enum ExecuteMsg {
     },
     SwapAndAction {
         sent_asset: Option<Asset>,
-        user_swap: Swap,
+        user_swaps: Vec<Swap>,
         min_asset: Asset,
         timeout_timestamp: u64,
         post_swap_action: Action,
@@ -96,7 +96,7 @@ pub enum Cw20HookMsg {
         recovery_addr: Addr,
     },
     SwapAndAction {
-        user_swap: Swap,
+        user_swaps: Vec<Swap>,
         min_asset: Asset,
         timeout_timestamp: u64,
         post_swap_action: Action,
